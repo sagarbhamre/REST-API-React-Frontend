@@ -77,7 +77,7 @@ class App extends Component {
           console.log('Error!');
           throw new Error('Could not authenticate you!');
         }
-        return res.json();
+        return res.json(); // received JWT token from server 
       })
       .then(resData => {
         console.log(resData);
@@ -87,13 +87,13 @@ class App extends Component {
           authLoading: false,
           userId: resData.userId
         });
-        localStorage.setItem('token', resData.token);
-        localStorage.setItem('userId', resData.userId);
+        localStorage.setItem('token', resData.token); // <=== store token in local storage
+        localStorage.setItem('userId', resData.userId); // <=== store userId in local storage
         const remainingMilliseconds = 60 * 60 * 1000;
         const expiryDate = new Date(
           new Date().getTime() + remainingMilliseconds
         );
-        localStorage.setItem('expiryDate', expiryDate.toISOString());
+        localStorage.setItem('expiryDate', expiryDate.toISOString()); // <=== store expiryDate in local storage
         this.setAutoLogout(remainingMilliseconds);
       })
       .catch(err => {
@@ -192,7 +192,7 @@ class App extends Component {
             path="/"
             exact
             render={props => (
-              <FeedPage userId={this.state.userId} token={this.state.token} />
+              <FeedPage userId={this.state.userId} token={this.state.token} /> // <=== pass userId and JWT token to FeedPage
             )}
           />
           <Route
