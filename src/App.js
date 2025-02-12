@@ -58,37 +58,46 @@ class App extends Component {
 
   loginHandler = (event, authData) => {
     event.preventDefault();
+    const graphqlQuery = {
+      query: `
+      {
+        login(data: {email: "${authData.email}", password: "${authData.password}"}) {
+          token
+          userId
+        }
+      }
+      
+      `
+    }
     this.setState({ authLoading: true });
-    fetch('http://localhost:8080/auth/login', {
+    fetch('http://localhost:8080/graphql', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        email: authData.email,
-        password: authData.password
-      })
+      body: JSON.stringify(graphqlQuery)
     })
       .then(res => {
-        if (res.status === 422) {
-          throw new Error('Validation failed.');
-        }
-        if (res.status !== 200 && res.status !== 201) {
-          console.log('Error!');
-          throw new Error('Could not authenticate you!');
-        }
-        return res.json(); // received JWT token from server 
+        return res.json();
       })
       .then(resData => {
+        if (resData.errors && resData.errors[0].statusCode === 422) {
+          const error = new Error('Validation failed. Make sure the email address isnt used yet!');
+          throw error;
+        }
+        if (resData.errors) {
+          const error = new Error('User login failed!');
+          throw error;
+        }
         console.log(resData);
         this.setState({
           isAuth: true,
-          token: resData.token,
+          token: resData.data.login.token,
           authLoading: false,
-          userId: resData.userId
+          userId: resData.data.login.userId
         });
-        localStorage.setItem('token', resData.token); // <=== store token in local storage
-        localStorage.setItem('userId', resData.userId); // <=== store userId in local storage
+        localStorage.setItem('token',  resData.data.login.token); // <=== store token in local storage
+        localStorage.setItem('userId', resData.data.login.userId); // <=== store userId in local storage
         const remainingMilliseconds = 60 * 60 * 1000;
         const expiryDate = new Date(
           new Date().getTime() + remainingMilliseconds
