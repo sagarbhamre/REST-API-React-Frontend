@@ -40,13 +40,18 @@ class SinglePost extends Component {
         return res.json();
       })
       .then(resData => {
+        let imageUrl = resData.data.post.imageUrl;
+            imageUrl = `images/${[...imageUrl]
+              .slice(7, imageUrl.length)
+              .join("")}`;
+
         if (resData.errors) {
           throw new Error('Fetching post failed!');
         }
         this.setState({
           title: resData.data.post.title,
           author: resData.data.post.creator.name,
-          image: 'http://localhost:8080/' + resData.data.post.imageUrl,
+          image: 'http://localhost:8080/' + imageUrl,
           date: new Date(resData.data.post.createdAt).toLocaleDateString('en-US'),
           content: resData.data.post.content
         });
