@@ -60,15 +60,14 @@ class App extends Component {
     event.preventDefault();
     const graphqlQuery = {
       query: `
-      {
-        login(data: {email: "${authData.email}", password: "${authData.password}"}) {
-          token
-          userId
+        {
+          login(email: "${authData.email}", password: "${authData.password}") {
+            token
+            userId
+          }
         }
-      }
-      
       `
-    }
+    };
     this.setState({ authLoading: true });
     fetch('http://localhost:8080/graphql', {
       method: 'POST',
@@ -81,13 +80,13 @@ class App extends Component {
         return res.json();
       })
       .then(resData => {
-        if (resData.errors && resData.errors[0].statusCode === 422) {
-          const error = new Error('Validation failed. Make sure the email address isnt used yet!');
-          throw error;
+        if (resData.errors && resData.errors[0].status === 422) {
+          throw new Error(
+            "Validation failed. Make sure the email address isn't used yet!"
+          );
         }
         if (resData.errors) {
-          const error = new Error('User login failed!');
-          throw error;
+          throw new Error('User login failed!');
         }
         console.log(resData);
         this.setState({
@@ -96,13 +95,13 @@ class App extends Component {
           authLoading: false,
           userId: resData.data.login.userId
         });
-        localStorage.setItem('token',  resData.data.login.token); // <=== store token in local storage
-        localStorage.setItem('userId', resData.data.login.userId); // <=== store userId in local storage
+        localStorage.setItem('token', resData.data.login.token);
+        localStorage.setItem('userId', resData.data.login.userId);
         const remainingMilliseconds = 60 * 60 * 1000;
         const expiryDate = new Date(
           new Date().getTime() + remainingMilliseconds
         );
-        localStorage.setItem('expiryDate', expiryDate.toISOString()); // <=== store expiryDate in local storage
+        localStorage.setItem('expiryDate', expiryDate.toISOString());
         this.setAutoLogout(remainingMilliseconds);
       })
       .catch(err => {
@@ -210,7 +209,7 @@ class App extends Component {
             path="/"
             exact
             render={props => (
-              <FeedPage userId={this.state.userId} token={this.state.token} /> // <=== pass userId and JWT token to FeedPage
+              <FeedPage userId={this.state.userId} token={this.state.token} />
             )}
           />
           <Route
